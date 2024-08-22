@@ -9,7 +9,7 @@ import os
 router = APIRouter()
 
 # Initialize the OpenAI API client with the provided API key
-client = openai.Client(api_key='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')
+client = openai.Client(api_key='put open api key')
 
 def read_pdf(file):
     try:
