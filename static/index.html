@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CV Summarizer</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        h1 {
+            color: #333;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .file-input {
+            margin-bottom: 20px;
+        }
+        .btn {
+            padding: 10px 15px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        .btn:disabled {
+            background-color: #6c757d;
+        }
+        .output {
+            margin-top: 20px;
+        }
+        .summary {
+            margin-bottom: 15px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>CV Summarizer</h1>
+        <div class="file-input">
+            <input type="file" id="cvFile" accept="application/pdf">
+        </div>
+        <button class="btn" id="summarizeBtn" onclick="summarizeCV()">Summarize CV</button>
+        <div class="output" id="output"></div>
+        <button class="btn" id="downloadBtn" onclick="downloadExcel()" disabled>Download Excel</button>
+    </div>
+
+    <script>
+        async function summarizeCV() {
+            const fileInput = document.getElementById('cvFile');
+            const file = fileInput.files[0];
+            const outputDiv = document.getElementById('output');
+            const downloadBtn = document.getElementById('downloadBtn');
+            downloadBtn.disabled = true;
+
+            if (!file) {
+                alert('Please select a PDF file.');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            const response = await fetch('/extract_key_points/', {
+                method: 'POST',
+                body: formData
+            });
+
+            if (!response.ok) {
+                outputDiv.innerHTML = `<p style="color: red;">Error: ${response.statusText}</p>`;
+                return;
+            }
+
+            const result = await response.json();
+            outputDiv.innerHTML = '';
+
+            result.summaries.forEach(summary => {
+                const div = document.createElement('div');
+                div.className = 'summary';
+                div.innerHTML = `<strong>${summary.Section}:</strong> ${summary.Summary}`;
+                outputDiv.appendChild(div);
+            });
+
+            downloadBtn.disabled = false;
+            downloadBtn.setAttribute('data-filename', result.filename);
+        }
+
+        function downloadExcel() {
+            const downloadBtn = document.getElementById('downloadBtn');
+            const filename = downloadBtn.getAttribute('data-filename');
+
+            if (filename) {
+                window.location.href = `/download_excel/?filename=${filename}`;
+            }
+        }
+    </script>
+</body>
+</html>
